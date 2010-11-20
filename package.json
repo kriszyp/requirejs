@@ -1,0 +1,11 @@
+{
+  "name": "require",
+  "version": "0.15.0",
+  "author": {
+    "name":"James Burke"
+  },
+  "directories": {
+    "lib": "require"
+  },
+  "main": "./require.js"
+}
