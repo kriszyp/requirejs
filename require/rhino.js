@@ -17,29 +17,29 @@ CommonJS modules, by overriding require.get().
 
     var fileUtil = {
         backSlashRegExp: /\\/g,
-    
+
         getLineSeparator: function () {
             return java.lang.System.getProperty("line.separator"); //Java String
         }
     };
 
-    require.load = function (moduleName, contextName) {
-        var url = require.nameToUrl(moduleName, null, contextName),
-            context = require.s.contexts[contextName];
-    
+    require.load = function (context, moduleName) {
+        var url = context.nameToUrl(moduleName, null);
+
         //isDone is used by require.ready()
         require.s.isDone = false;
-    
+
         //Indicate a the module is in process of loading.
         context.loaded[moduleName] = false;
-    
+        context.scriptCount += 1;
+
         load(url);
-    
+
         //Support anonymous modules.
-        require.completeLoad(moduleName, context);
+        context.completeLoad(moduleName);
     };
-    
-    //Adapter to get text plugin to work.    
+
+    //Adapter to get text plugin to work.
     require.fetchText = function (url, callback) {
         var encoding = "utf-8",
             file = new java.io.File(url),
@@ -53,7 +53,7 @@ CommonJS modules, by overriding require.get().
 
             // Byte Order Mark (BOM) - The Unicode Standard, version 3.0, page 324
             // http://www.unicode.org/faq/utf_bom.html
-            
+
             // Note that when we use utf-8, the BOM should appear as "EF BB BF", but it doesn't due to this bug in the JDK:
             // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4508058
             if (line && line.length() && line.charAt(0) === 0xfeff) {
