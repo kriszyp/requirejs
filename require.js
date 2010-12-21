@@ -1,5 +1,5 @@
 /** vim: et:ts=4:sw=4:sts=4
- * @license RequireJS 0.2.0 Copyright (c) 2010, The Dojo Foundation All Rights Reserved.
+ * @license RequireJS 0.2.1 Copyright (c) 2010, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
@@ -12,7 +12,7 @@
 var require, define;
 (function () {
     //Change this version number for each release.
-    var version = "0.2.0",
+    var version = "0.2.1",
         commentRegExp = /(\/\*([\s\S]*?)\*\/|\/\/(.*)$)/mg,
         cjsRequireRegExp = /require\(["']([\w\!\-_\.\/]+)["']\)/g,
         ostring = Object.prototype.toString,
@@ -228,6 +228,7 @@ var require, define;
             return {
                 prefix: prefix,
                 name: name,
+                parentName: baseName,
                 fullName: prefix ? prefix + "!" + name : name
             };
         }
@@ -317,6 +318,7 @@ var require, define;
             mixin(modRequire, {
                 nameToUrl: makeContextModuleFunc(context.nameToUrl, moduleName),
                 toUrl: makeContextModuleFunc(context.toUrl, moduleName),
+                isDefined: makeContextModuleFunc(context.isDefined, moduleName),
                 ready: req.ready,
                 isBrowser: req.isBrowser
             });
@@ -474,7 +476,7 @@ var require, define;
                 //value as a dependency.
                 if (depArg) {
                     //Split the dependency name into plugin and name parts
-                    depArg = splitPrefix(depArg, name);
+                    depArg = splitPrefix(depArg, (name || relModuleName));
                     depName = depArg.fullName;
 
                     //Fix the name in depArray to be just the name, since
@@ -668,7 +670,10 @@ var require, define;
                 loaded[fullName] = false;
             }
 
-            plugins[pluginName].load(name, makeRequire(name), function (ret) {
+            //Use parentName here since the plugin's name is not reliable,
+            //could be some weird string with no path that actually wants to
+            //reference the parentName's path.
+            plugins[pluginName].load(name, makeRequire(dep.parentName), function (ret) {
                 //Allow the build process to register plugin-loaded dependencies.
                 if (require.onPluginLoad) {
                     require.onPluginLoad(context, pluginName, name, ret);
@@ -728,7 +733,7 @@ var require, define;
          * Resumes tracing of dependencies and then checks if everything is loaded.
          */
         resume = function () {
-            var args, i, p = context.paused;
+            var args, i, p;
 
             if (context.scriptCount <= 0) {
                 //Synchronous envs will push the number below zero with the
@@ -753,7 +758,8 @@ var require, define;
                 return undefined;
             }
 
-            if (p.length) {
+            while (context.paused.length) {
+                p = context.paused;
                 //Reset paused list
                 context.paused = [];
 
@@ -862,6 +868,10 @@ var require, define;
                 if (cfg.ready) {
                     req.ready(cfg.ready);
                 }
+            },
+
+            isDefined: function (moduleName, relModuleName) {
+                return splitPrefix(moduleName, relModuleName).fullName in defined;
             },
 
             require: function (deps, callback, relModuleName) {
@@ -1607,6 +1617,7 @@ var require, define;
             if (!ctx.scriptCount) {
                 ctx.resume();
             }
+            req.checkReadyState();
         }, 0);
     }
 }());

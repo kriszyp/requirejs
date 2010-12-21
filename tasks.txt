@@ -1,8 +1,7 @@
-- require.ready() not firing if no modules to load?
-- i18n build issue.
-- require({}, []) does not pick up the dependencies? Or is it:
 - require.js + modules in one file, still asks to load the other files, if there is a require in there?
+- ending slash in paths should throw error: https://github.com/jrburke/requirejs/issues/issue/49/
 
+- sync calls to plugins, the has! example.
 
 - npm example/integration?
 - need to document how to use the packages config with Node.
@@ -12,6 +11,8 @@
   - Actually test a pluginBuilder.
 - has.js plugins
 - require.def patch: https://github.com/jrburke/requirejs/pull/50
+
+- Visualization of dependencies, highlighting circular dependencies: RobbertAtWork
 
 - email on jsonp removal, toUrl and package names.
 
