@@ -1,12 +1,11 @@
 /**
- * @license RequireJS text Copyright (c) 2010, The Dojo Foundation All Rights Reserved.
+ * @license RequireJS text Copyright (c) 2010-2011, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
-/*jslint regexp: false, nomen: false, plusplus: false */
+/*jslint regexp: false, nomen: false, plusplus: false, strict: false */
 /*global require: false, XMLHttpRequest: false, ActiveXObject: false,
   define: false */
-"use strict";
 
 (function () {
     var progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'],
@@ -89,60 +88,46 @@
         };
     }
 
-    define({
-        load: function (name, req, onLoad, config) {
-            //Name has format: some.module!filext!strip!text
-            //The strip and text parts are optional.
-            //if strip is present, then that means only get the string contents
-            //inside a body tag in an HTML string. For XML/SVG content it means
-            //removing the <?xml ...?> declarations so the content can be inserted
-            //into the current doc without problems.
-            //If text is present, it is the actual text of the file.
-            var strip = false, text = null, key, url, index = name.indexOf("."),
-                modName = name.substring(0, index), fullKey,
-                ext = name.substring(index + 1, name.length);
+    define(function () {
+        return {
+            load: function (name, req, onLoad, config) {
+                //Name has format: some.module.filext!strip
+                //The strip part is optional.
+                //if strip is present, then that means only get the string contents
+                //inside a body tag in an HTML string. For XML/SVG content it means
+                //removing the <?xml ...?> declarations so the content can be inserted
+                //into the current doc without problems.
 
-            index = ext.indexOf("!");
-            if (index !== -1) {
-                //Pull off the strip arg.
-                strip = ext.substring(index + 1, ext.length);
-                ext = ext.substring(0, index);
-                index = strip.indexOf("!");
-                if (index !== -1 && strip.substring(0, index) === "strip") {
-                    //Pull off the text.
-                    text = strip.substring(index + 1, strip.length);
-                    strip = "strip";
-                } else if (strip !== "strip") {
-                    //strip is actually the inlined text.
-                    text = strip;
-                    strip = null;
+                var strip = false, url, index = name.indexOf("."),
+                    modName = name.substring(0, index),
+                    ext = name.substring(index + 1, name.length);
+
+                index = ext.indexOf("!");
+                if (index !== -1) {
+                    //Pull off the strip arg.
+                    strip = ext.substring(index + 1, ext.length);
+                    strip = strip === "strip";
+                    ext = ext.substring(0, index);
                 }
-            }
-            key = modName + "!" + ext;
-            fullKey = strip ? key + "!" + strip : key;
 
-            //Store off text if it is available for the given key and be done.
-            if (text !== null) {
-                onLoad(text);
-            } else {
                 //Load the text.
                 url = req.nameToUrl(modName, "." + ext);
                 require.fetchText(url, function (text) {
                     text = strip ? require.textStrip(text) : text;
-                    if (require.isBuild && config.inlineText) {
+                    if (config.isBuild && config.inlineText) {
                         buildMap[name] = text;
                     }
                     onLoad(text);
                 });
-            }
-        },
+            },
 
-        onWrite: function (pluginName, moduleName, write) {
-            if (moduleName in buildMap) {
-                var text = require.jsEscape(buildMap[moduleName]);
-                write("define('" + pluginName + "!" + moduleName  +
-                      "', function () { return '" + text + "';});\n");
+            write: function (pluginName, moduleName, write) {
+                if (moduleName in buildMap) {
+                    var text = require.jsEscape(buildMap[moduleName]);
+                    write("define('" + pluginName + "!" + moduleName  +
+                          "', function () { return '" + text + "';});\n");
+                }
             }
-        }
+        };
     });
 }());
