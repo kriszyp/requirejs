@@ -19,7 +19,7 @@ define(['fs', 'path'], function (fs, path) {
         var parts = dir.split('/'),
             currDir = '';
         parts.forEach(function (part) {
-            currDir += (currDir || !part ? '/' : '') + part;
+            currDir += (currDir == '/' ? '' : '/') + part;
 
             //First part may be empty string if path starts with a slash.
             if (part) {
@@ -109,7 +109,6 @@ define(['fs', 'path'], function (fs, path) {
             //summary: copies files from srcDir to destDir using the regExpFilter to determine if the
             //file should be copied. Returns a list file name strings of the destinations that were copied.
             regExpFilter = regExpFilter || /\w/;
-
             var fileNames = file.getFilteredFileList(srcDir, regExpFilter, true),
             copiedFiles = [], i, srcFileName, destFileName;
 
